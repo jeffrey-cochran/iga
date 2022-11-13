@@ -1,8 +1,11 @@
-from constants import test_knots, test_parameter_values
-from utils import find_span, basis_funcs
+from fig_3_1_constants import knots, parameter_values, control_points
+from utils import curve_point
+import matplotlib.pyplot as pl
 
-knot_span = find_span(test_parameter_values, test_knots)
+# print(parameter_values.shape)
+z = curve_point(parameter_values, knots, control_points, 3)
+x = z[:,0]
+y = z[:,1]
 
-print(
-    basis_funcs(knot_span, test_parameter_values, test_knots, 2, verbose=True)
-)
+pl.plot(x,y)
+pl.show()
