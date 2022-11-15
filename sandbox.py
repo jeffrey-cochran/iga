@@ -1,11 +1,4 @@
-from fig_3_1_constants import knots, parameter_values, control_points
-from utils import curve_point
-import matplotlib.pyplot as pl
+import examples.ex_7_3 as ex
+from utils import plot_bspline
 
-# print(parameter_values.shape)
-z = curve_point(parameter_values, knots, control_points, 3)
-x = z[:,0]
-y = z[:,1]
-
-pl.plot(x,y)
-pl.show()
+plot_bspline(ex.knots, ex.control_points, ex.poly_order, is_nurbs=ex.is_nurbs, show_control_points=True)

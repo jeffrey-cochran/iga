@@ -1,5 +1,6 @@
-from numpy import searchsorted, s_, broadcast_to, vstack, ones, zeros, atleast_2d
-from numpy.typing import ArrayLike, NDArray
+from numpy import searchsorted, s_, vstack, ones, zeros, unique, linspace, hstack, broadcast_to
+from numpy.typing import NDArray
+import matplotlib.pyplot as plt
 
 def find_span(parameter_values: NDArray, knot_vector: NDArray) -> NDArray:
     """Algorithm A2.1 from Piegl and Tiller, extended to a vector of paramter values"""
@@ -9,8 +10,9 @@ def find_span(parameter_values: NDArray, knot_vector: NDArray) -> NDArray:
         raise ValueError("Parameter value cannot be greater than the greatest knot.")
 
     precedes = searchsorted(knot_vector, parameter_values, side='left')
+    min_span = searchsorted(knot_vector, knot_vector[0], side='right')
     succeeds = precedes - 1
-    succeeds[succeeds < 0] = 0
+    succeeds[succeeds < 0] = min_span - 1
 
     return succeeds
 
@@ -128,17 +130,66 @@ def ders_basis_funcs(knot_spans: NDArray, parameter_values: NDArray, knot_vector
 
     return ders
 
-def curve_point(parameter_values: NDArray, knot_vector: NDArray, control_points: NDArray, poly_order) -> NDArray:
+def curve_point(parameter_values: NDArray, knot_vector: NDArray, control_points: NDArray, poly_order, is_nurbs: bool=False) -> NDArray:
     span_eval = find_span(parameter_values, knot_vector)
     basis_func_eval = basis_funcs(span_eval, parameter_values, knot_vector, poly_order, verbose=False)
 
     curve_points = zeros((parameter_values.shape[0], control_points.shape[1]))
     for i in range(poly_order+1):
         curve_points += (basis_func_eval[i,:]*(control_points[span_eval-poly_order+i, :]).transpose()).transpose()
-        print(curve_points)
 
+    if is_nurbs:
+        curve_points = (curve_points[:,:-1].transpose() / curve_points[:,-1]).transpose()
+    
     return curve_points
 
-def plot_bspline(knot_vector: NDArray, control_points: NDArray, poly_order: int) -> NDArray:
-    unique_knots = 
+def surface_point(parameter_values: NDArray, knot_vector_u: NDArray, knot_vector_v: NDArray, control_points: NDArray, poly_order, is_nurbs: bool=False):
+
+    u_len = knot_vector_u.shape[0]
+    v_len = knot_vector_v.shape[0]
+    if control_points.shape[0] != u_len or control_points.shape[1] != v_len:
+        raise ValueError("The number of control points is inconsistent with the number of knots and polynomial order.")
+
+    return
+
+def plot_bspline(knot_vector: NDArray, control_points: NDArray, poly_order: int, knot_span_refinement:int=100, is_nurbs=False, show_control_points=True):
+    unique_knots = unique(knot_vector)
+    sub_disc = tuple((
+        linspace(unique_knots[i], unique_knots[i+1], knot_span_refinement) for i in range(len(unique_knots)-1)
+    ))
+    parameter_values = hstack(sub_disc)
+    xy = curve_point(parameter_values, knot_vector, control_points, poly_order, is_nurbs=is_nurbs)
+    x = xy[:,0]
+    y = xy[:,1]
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.plot(x, y, '-c', zorder=1)
+    ax.set_aspect('equal', adjustable='box')
+
+    if show_control_points:
+        uw_control_points = control_points
+        if is_nurbs:
+            uw_control_points = (control_points.transpose() / control_points[:,-1]).transpose()
+        unit_interval = linspace(0,1,knot_span_refinement)
+        cp_sub_disc = (
+            (
+                broadcast_to(uw_control_points[i,:], (knot_span_refinement,3)).transpose() * unit_interval + 
+                broadcast_to(uw_control_points[i+1,:], (knot_span_refinement,3)).transpose() * (1-unit_interval)
+            ).transpose() for i in range(uw_control_points.shape[0]-1) 
+        )
+        for line_segment in cp_sub_disc:
+            xy = line_segment[:,:2]
+            x = xy[:,0]
+            y = xy[:,1]
+            ax.plot(x, y,'--k', zorder=2)
+        
+        xy = uw_control_points[:,:2]
+        x = xy[:,0]
+        y = xy[:,1]
+        ax.scatter(x, y, c='m', marker='o', zorder=3)
+        
+
+        
+    plt.show()
     return
