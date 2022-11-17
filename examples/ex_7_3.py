@@ -17,12 +17,14 @@ weights = asarray([
 ])
 
 uw_control_points = asarray([
-    [   a,   0.5, 1.],
-    [  0.,   2.0, 1.],
-    [  -a,   0.5, 1.],
-    [-2*a,   -1., 1.],
-    [   0,   -1., 1.],
-    [ 2*a,   -1., 1.],
-    [   a,   0.5, 1.]
+        [ 2,  0, 4, 1],
+        [ 2*a,  2*a, 4*a, a],
+        [ 0,  2, 4, 1],
+        [-2*a,  2*a, 4*a, a],
+        [-2,  0, 4, 1],
+        [-2*a, -2*a, 4*a, a],
+        [ 0, -2, 4, 1],
+        [ 2*a, -2*a, 4*a, a],
+        [ 2,  0, 4, 1]
 ])
 control_points = (uw_control_points.transpose()*weights).transpose()

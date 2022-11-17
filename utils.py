@@ -1,4 +1,4 @@
-from numpy import searchsorted, s_, vstack, ones, zeros, unique, linspace, hstack, broadcast_to
+from numpy import searchsorted, s_, vstack, ones, zeros, unique, linspace, hstack, broadcast_to, swapaxes
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 
@@ -143,14 +143,61 @@ def curve_point(parameter_values: NDArray, knot_vector: NDArray, control_points:
     
     return curve_points
 
-def surface_point(parameter_values: NDArray, knot_vector_u: NDArray, knot_vector_v: NDArray, control_points: NDArray, poly_order, is_nurbs: bool=False):
+def surface_point(
+    parameter_values: NDArray, 
+    knot_vector_u: NDArray, 
+    knot_vector_v: NDArray, 
+    control_points: NDArray, 
+    poly_order_u: int,
+    poly_order_v: int, 
+    is_nurbs: bool=False
+):
 
     u_len = knot_vector_u.shape[0]
     v_len = knot_vector_v.shape[0]
-    if control_points.shape[0] != u_len or control_points.shape[1] != v_len:
-        raise ValueError("The number of control points is inconsistent with the number of knots and polynomial order.")
 
-    return
+    if control_points.shape[0] != (u_len - poly_order_u - 1):
+        raise ValueError("The number of control points in the u-direction is inconsistent with the number of knots and polynomial order.")
+
+    if control_points.shape[1] != (v_len - poly_order_v - 1):
+        raise ValueError("The number of control points in the v-direction is inconsistent with the number of knots and polynomial order.")
+
+    u_span_eval = find_span(parameter_values, knot_vector_u)
+    v_span_eval = find_span(parameter_values, knot_vector_v)
+
+    u_span_broadcast = broadcast_to(u_span_eval, (u_span_eval.shape[0], v_span_eval.shape[0]))
+    v_span_broadcast = broadcast_to(v_span_eval, (v_span_eval.shape[0], u_span_eval.shape[0])).transpose()
+
+    u_basis_funcs = basis_funcs(u_span_eval, parameter_values, knot_vector_u, poly_order_u, verbose=False)
+    v_basis_funcs = basis_funcs(v_span_eval, parameter_values, knot_vector_v, poly_order_v, verbose=False)
+
+    temp = zeros((poly_order_v+1, parameter_values.shape[0], parameter_values.shape[0], control_points.shape[-1]))
+    surface_points = zeros((parameter_values.shape[0], parameter_values.shape[0], control_points.shape[-1]))
+
+    # NOTE: since the sums are independent, we can compute
+    # the sum over the basis functions in one direction,
+    # and then multiple them by the basis functions in the other
+    # direction and add them again.
+
+    #
+    # Sum over basis functions in the u-direction
+    for i in range(poly_order_v+1):
+        for j in range(poly_order_u+1):
+            temp[i,...] += (
+                u_basis_funcs[j,:]*(                    
+                    control_points[u_span_broadcast-poly_order_u+j, v_span_broadcast-poly_order_v+i, :]
+                ).transpose(2,1,0)
+            ).transpose(2,1,0)
+
+    #
+    # Now sum over the basis functions in the v-direction
+    for i in range(poly_order_v+1):
+        surface_points += (v_basis_funcs[i,:]*temp[i,...].transpose((0,2,1))).transpose(0,2,1)
+
+    if is_nurbs:
+        surface_points = (surface_points[:,:,:-1].transpose(2,0,1) / surface_points[:, :,-1]).transpose(1,2,0)
+
+    return surface_points
 
 def plot_bspline(knot_vector: NDArray, control_points: NDArray, poly_order: int, knot_span_refinement:int=100, is_nurbs=False, show_control_points=True):
     unique_knots = unique(knot_vector)

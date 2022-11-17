@@ -20,27 +20,14 @@ knots = asarray(
 ])
 
 a = sqrt(2.)/2.
-weights = asarray([
-    1.,
-    a,
-    1.,
-    a,
-    1.,
-    a,
-    1.,
-    a,
-    1.
+control_points = asarray([
+        [ 2,  0, 1],
+        [ 2*a,  2*a, a],
+        [ 0,  2, 1],
+        [-2*a,  2*a, a],
+        [-2,  0, 1],
+        [-2*a, -2*a, a],
+        [ 0, -2, 1],
+        [ 2*a, -2*a, a],
+        [ 2,  0, 1]
 ])
-
-uw_control_points = asarray([
-    [1., 0., 1.],
-    [1., 1., 1.],
-    [0., 1., 1.],
-    [-1, 1., 1.],
-    [-1, 0., 1.],
-    [-1, -1, 1.],
-    [0., -1, 1.],
-    [1., -1, 1.],
-    [1., 0., 1.]
-])
-control_points = (weights*uw_control_points.transpose()).transpose()
