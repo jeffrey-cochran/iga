@@ -1,0 +1,53 @@
+# Begin surface dump
+
+# Begin trim loop
+# Begin trim curve
+vp 0 1
+vp 1 1
+cstype bspline
+deg 1
+curv2 9 10
+parm u 0 0 1 1
+end
+
+# Begin trim curve
+vp 1 1
+vp 1 2
+cstype bspline
+deg 1
+curv2 11 12
+parm u 1 1 2 2
+end
+
+# Begin trim curve
+vp 1 2
+vp 0 2
+cstype bspline
+deg 1
+curv2 13 14
+parm u 0 0 1 1
+end
+
+# Begin trim curve
+vp 0 2
+vp 0 1
+cstype bspline
+deg 1
+curv2 15 16
+parm u 1 1 2 2
+end
+
+
+
+v 0.0 0.0 1.0 1.0
+v 0.0 1.0 1.0 1.0
+v 1.0 0.0 1.0 1.0
+v 1.0 1.0 1.0 1.0
+
+cstype rat bspline
+deg 1 1
+surf 0 1 0 1 1 2 3 4
+parm u 0 0 1 1
+parm v 1 1 2 2
+trim 0 1 1 1 2 2 0 1 3 1 2 4
+end
